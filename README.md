@@ -30,16 +30,17 @@ sudo cp age-ssh/age-ssh /usr/local/bin/
 ## Usage
 
 ```
-Usage: age-ssh <e|d> [-f] [-k key] <file>
+Usage: age-ssh <e|d> [-f] [-pub|-priv key] <file>
        age-ssh -v
        age-ssh -h
 
-  e [-f] <file>      Encrypt file using ~/.ssh/id_ed25519.pub
-  d [-f] <file.age>  Decrypt file using ~/.ssh/id_ed25519
-  -f                 Force overwrite if target file exists
-  -k <key>           Use custom SSH key (appends .pub for public key)
-  -h                 Show this help message
-  -v                 Show version information
+  e [-f] [-pub key] <file>      Encrypt file (default: ~/.ssh/id_ed25519.pub)
+  d [-f] [-priv key] <file.age> Decrypt file (default: ~/.ssh/id_ed25519)
+  -f                            Force overwrite if target file exists
+  -pub <key>                    Public key path for encryption
+  -priv <key>                   Private key path for decryption
+  -h                            Show this help message
+  -v                            Show version information
 ```
 
 ### Basic Examples
@@ -54,8 +55,11 @@ age-ssh d secret.txt.age
 # Force overwrite if target exists
 age-ssh e -f secret.txt
 
-# Use a different SSH key
-age-ssh e -k ~/.ssh/my_other_key secret.txt
+# Use a different SSH public key for encryption
+age-ssh e -pub ~/.ssh/my_other_key.pub secret.txt
+
+# Use a different SSH private key for decryption
+age-ssh d -priv ~/.ssh/my_other_key secret.txt.age
 ```
 
 ## Scenario: Secure File Transfer Between Alice and Bob
@@ -98,12 +102,11 @@ Bob sends this to Alice, who saves it as `bob_id_ed25519.pub` in a convenient lo
 
 ### Step 3: Alice Encrypts the File for Bob
 
-Alice encrypts the file using Bob's public key. The `-k` argument takes a base path, and the script appends `.pub` to find the public key. Since Alice only needs Bob's public key for encryption, only the `.pub` file needs to exist:
+Alice encrypts the file using Bob's public key:
 
 ```bash
-# Alice encrypts secret.txt for Bob
-# The script will use ~/keys/bob_id_ed25519.pub for encryption
-age-ssh e -k ~/keys/bob_id_ed25519 secret.txt
+# Alice encrypts secret.txt for Bob using his public key
+age-ssh e -pub ~/keys/bob_id_ed25519.pub secret.txt
 ```
 
 This creates `secret.txt.age`, which only Bob can decrypt.
@@ -119,6 +122,9 @@ Bob receives `secret.txt.age` and decrypts it using his private key:
 ```bash
 # Bob decrypts the file using his default private key (~/.ssh/id_ed25519)
 age-ssh d secret.txt.age
+
+# Or, if Bob's key is in a non-default location:
+age-ssh d -priv ~/keys/my_ed25519 secret.txt.age
 ```
 
 This creates `secret.txt` with the original contents. Only Bob can decrypt this file because only he has the private key that corresponds to the public key Alice used for encryption.
