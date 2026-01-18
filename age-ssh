@@ -1,0 +1,156 @@
+#!/bin/bash
+#
+# age-ssh: Encrypt and decrypt files using age with SSH ed25519 keys.
+# tested on MacOS Sequoia 15.7.3 with age v1.3.1
+
+set -euo pipefail
+
+PGM_NAME="age-ssh"
+PGM_VERSION="1.0.0"
+PGM_URL="https://github.com/jftuga/age-ssh"
+
+SSH_KEY_PRIVATE="${HOME}/.ssh/id_ed25519"
+SSH_KEY_PUBLIC="${SSH_KEY_PRIVATE}.pub"
+
+usage() {
+    echo "Usage: age-ssh <e|d> [-f] [-k key] <file>" >&2
+    echo "       age-ssh -v" >&2
+    echo "       age-ssh -h" >&2
+    echo "" >&2
+    echo "  e [-f] <file>      Encrypt file using ${SSH_KEY_PUBLIC}" >&2
+    echo "  d [-f] <file.age>  Decrypt file using ${SSH_KEY_PRIVATE}" >&2
+    echo "  -f                 Force overwrite if target file exists" >&2
+    echo "  -k <key>           Use custom SSH key (appends .pub for public key)" >&2
+    echo "  -h                 Show this help message" >&2
+    echo "  -v                 Show version information" >&2
+    exit "${1:-1}"
+}
+
+# Check for version flag first
+if [ "${1:-}" = "-v" ]; then
+    echo "${PGM_NAME} v${PGM_VERSION}"
+    echo "${PGM_URL}"
+    exit 0
+fi
+
+# Check for help flag
+if [ "${1:-}" = "-h" ]; then
+    usage 0
+fi
+
+# Check that age is installed
+if ! command -v age &>/dev/null; then
+    echo "Error: 'age' is not installed." >&2
+    exit 1
+fi
+
+# If no arguments, show usage
+if [ $# -eq 0 ]; then
+    usage 0
+fi
+
+# Check argument count
+if [ $# -lt 2 ] || [ $# -gt 5 ]; then
+    usage
+fi
+
+command="$1"
+shift
+
+# Check for -f and -k flags
+force=0
+while [ $# -gt 1 ]; do
+    case "$1" in
+        -f)
+            force=1
+            shift
+            ;;
+        -k)
+            shift
+            if [ $# -lt 2 ]; then
+                usage
+            fi
+            # Check that argument doesn't end in .pub
+            case "$1" in
+                *.pub)
+                    echo "Error: The -k argument should be the private key path (without .pub extension)." >&2
+                    exit 1
+                    ;;
+            esac
+            SSH_KEY_PRIVATE="$1"
+            SSH_KEY_PUBLIC="${SSH_KEY_PRIVATE}.pub"
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# Ensure we still have a file argument
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+file="$1"
+
+# Check that the file exists
+if [ ! -f "$file" ]; then
+    echo "Error: File '$file' does not exist." >&2
+    exit 1
+fi
+
+case "$command" in
+    e)
+        # Check that file does not already have .age extension
+        case "$file" in
+            *.age)
+                echo "Error: Cannot encrypt a file that already has .age extension." >&2
+                exit 1
+                ;;
+        esac
+        # Check if target file already exists
+        if [ $force -eq 0 ] && [ -e "${file}.age" ]; then
+            echo "Error: Target file '${file}.age' already exists. Use -f to overwrite." >&2
+            exit 1
+        fi
+        # Check that public key exists
+        if [ ! -f "$SSH_KEY_PUBLIC" ]; then
+            echo "Error: Public key '$SSH_KEY_PUBLIC' does not exist." >&2
+            exit 1
+        fi
+        age -R "$SSH_KEY_PUBLIC" -o "${file}.age" "$file"
+        chmod 600 "${file}.age"
+        echo "Encrypted: ${file} -> ${file}.age"
+        ;;
+    d)
+        # Check that file has .age extension
+        case "$file" in
+            *.age)
+                # Strip .age extension for output filename
+                output="${file%.age}"
+                # Check if target file already exists
+                if [ $force -eq 0 ] && [ -e "$output" ]; then
+                    echo "Error: Target file '$output' already exists. Use -f to overwrite." >&2
+                    exit 1
+                fi
+                # Check that private key exists
+                if [ ! -f "$SSH_KEY_PRIVATE" ]; then
+                    echo "Error: Private key '$SSH_KEY_PRIVATE' does not exist." >&2
+                    exit 1
+                fi
+                age -d -i "$SSH_KEY_PRIVATE" -o "$output" "$file"
+                chmod 600 "$output"
+                echo "Decrypted: ${file} -> ${output}"
+                ;;
+            *)
+                echo "Error: Cannot decrypt a file without .age extension." >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        echo "Error: Unknown command '$command'." >&2
+        usage
+        ;;
+esac
