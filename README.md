@@ -4,6 +4,10 @@ Encrypt and decrypt files using [age](https://github.com/FiloSottile/age) with S
 
 This is a simple wrapper script that simplifies the `age` command-line interface for common encryption/decryption tasks using your existing SSH keys.
 
+## Disclaimer
+
+This script was vibe-coded by `Claude Opus 4.5`. As such, the author can't be held responsible for data loss, security incidents, or the AI's occasional overconfidence. **Use at your own risk.**
+
 ## Requirements
 
 - [age](https://github.com/FiloSottile/age) - Install via `brew install age` (macOS) or your package manager
@@ -94,11 +98,11 @@ Bob sends this to Alice, who saves it as `bob_id_ed25519.pub` in a convenient lo
 
 ### Step 3: Alice Encrypts the File for Bob
 
-Alice encrypts the file using Bob's public key. Note that the `-k` argument expects the private key path (without `.pub`), and the script automatically appends `.pub` for encryption:
+Alice encrypts the file using Bob's public key. The `-k` argument takes a base path, and the script appends `.pub` to find the public key. Since Alice only needs Bob's public key for encryption, only the `.pub` file needs to exist:
 
 ```bash
 # Alice encrypts secret.txt for Bob
-# She provides the path WITHOUT the .pub extension
+# The script will use ~/keys/bob_id_ed25519.pub for encryption
 age-ssh e -k ~/keys/bob_id_ed25519 secret.txt
 ```
 
@@ -133,3 +137,19 @@ MIT License - See [LICENSE](LICENSE) for details.
 ## Acknowledgments
 
 - [age](https://github.com/FiloSottile/age) by Filippo Valsorda - the underlying encryption tool
+
+## Personal Project Disclosure
+
+This program is my own original idea, conceived and developed entirely:
+
+* On my own personal time, outside of work hours
+* For my own personal benefit and use
+* On my personally owned equipment
+* Without using any employer resources, proprietary information, or trade secrets
+* Without any connection to my employer's business, products, or services
+* Independent of any duties or responsibilities of my employment
+
+This project does not relate to my employer's actual or demonstrably
+anticipated research, development, or business activities. No
+confidential or proprietary information from any employer was used
+in its creation.
