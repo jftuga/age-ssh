@@ -1,4 +1,6 @@
-# age-ssh
+# sage
+
+**S**SH + **age** = **sage**
 
 Encrypt and decrypt files using [age](https://github.com/FiloSottile/age) with SSH ed25519 keys.
 
@@ -18,21 +20,21 @@ This script was vibe-coded by `Claude Opus 4.5`. As such, the author can't be he
 
 ```bash
 # Clone the repository
-git clone https://github.com/jftuga/age-ssh.git
+git clone https://github.com/jftuga/sage.git
 
 # Make the script executable and copy to your PATH
-chmod +x age-ssh/age-ssh
-cp age-ssh/age-ssh ~/.local/bin/
+chmod +x sage/sage
+cp sage/sage ~/.local/bin/
 # or
-sudo cp age-ssh/age-ssh /usr/local/bin/
+sudo cp sage/sage /usr/local/bin/
 ```
 
 ## Usage
 
 ```
-Usage: age-ssh <e|d> [-f] [-pub|-priv key] <file>
-       age-ssh -v
-       age-ssh -h
+Usage: sage <e|d> [-f] [-pub|-priv key] <file>
+       sage -v
+       sage -h
 
   e [-f] [-pub key] <file>      Encrypt file (default: ~/.ssh/id_ed25519.pub)
   d [-f] [-priv key] <file.age> Decrypt file (default: ~/.ssh/id_ed25519)
@@ -47,19 +49,19 @@ Usage: age-ssh <e|d> [-f] [-pub|-priv key] <file>
 
 ```bash
 # Encrypt a file (creates secret.txt.age)
-age-ssh e secret.txt
+sage e secret.txt
 
 # Decrypt a file (creates secret.txt)
-age-ssh d secret.txt.age
+sage d secret.txt.age
 
 # Force overwrite if target exists
-age-ssh e -f secret.txt
+sage e -f secret.txt
 
 # Use a different SSH public key for encryption
-age-ssh e -pub ~/.ssh/my_other_key.pub secret.txt
+sage e -pub ~/.ssh/my_other_key.pub secret.txt
 
 # Use a different SSH private key for decryption
-age-ssh d -priv ~/.ssh/my_other_key secret.txt.age
+sage d -priv ~/.ssh/my_other_key secret.txt.age
 ```
 
 ## Scenario: Secure File Transfer Between Alice and Bob
@@ -106,7 +108,7 @@ Alice encrypts the file using Bob's public key:
 
 ```bash
 # Alice encrypts secret.txt for Bob using his public key
-age-ssh e -pub ~/keys/bob_id_ed25519.pub secret.txt
+sage e -pub ~/keys/bob_id_ed25519.pub secret.txt
 ```
 
 This creates `secret.txt.age`, which only Bob can decrypt.
@@ -121,10 +123,10 @@ Bob receives `secret.txt.age` and decrypts it using his private key:
 
 ```bash
 # Bob decrypts the file using his default private key (~/.ssh/id_ed25519)
-age-ssh d secret.txt.age
+sage d secret.txt.age
 
 # Or, if Bob's key is in a non-default location:
-age-ssh d -priv ~/keys/my_ed25519 secret.txt.age
+sage d -priv ~/keys/my_ed25519 secret.txt.age
 ```
 
 This creates `secret.txt` with the original contents. Only Bob can decrypt this file because only he has the private key that corresponds to the public key Alice used for encryption.
