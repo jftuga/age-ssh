@@ -1,21 +1,21 @@
 #!/bin/bash
 #
-# age-ssh: Encrypt and decrypt files using age with SSH ed25519 keys.
+# sage: Encrypt and decrypt files using age with SSH ed25519 keys.
 # tested on MacOS Sequoia 15.7.3 with age v1.3.1
 
 set -euo pipefail
 
-PGM_NAME="age-ssh"
-PGM_VERSION="1.1.0"
-PGM_URL="https://github.com/jftuga/age-ssh"
+PGM_NAME="sage"
+PGM_VERSION="1.2.0"
+PGM_URL="https://github.com/jftuga/sage"
 
 SSH_KEY_PRIVATE="${HOME}/.ssh/id_ed25519"
 SSH_KEY_PUBLIC="${SSH_KEY_PRIVATE}.pub"
 
 usage() {
-    echo "Usage: age-ssh <e|d> [-f] [-pub|-priv key] <file>" >&2
-    echo "       age-ssh -v" >&2
-    echo "       age-ssh -h" >&2
+    echo "Usage: sage <e|d> [-f] [-pub|-priv key] <file>" >&2
+    echo "       sage -v" >&2
+    echo "       sage -h" >&2
     echo "" >&2
     echo "  e [-f] [-pub key] <file>      Encrypt file (default: ${SSH_KEY_PUBLIC})" >&2
     echo "  d [-f] [-priv key] <file.age> Decrypt file (default: ${SSH_KEY_PRIVATE})" >&2
